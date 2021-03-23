@@ -39,6 +39,7 @@
 #include <thread.h>
 #include <current.h>
 #include <synch.h>
+#include <stdbool.h>
 
 ////////////////////////////////////////////////////////////
 //
@@ -157,6 +158,7 @@ lock_create(const char *name)
 	HANGMAN_LOCKABLEINIT(&lock->lk_hangman, lock->lk_name);
 
 	// add stuff here as needed
+	spinlock_init(&lock->locked);
 
 	return lock;
 }
@@ -167,6 +169,7 @@ lock_destroy(struct lock *lock)
 	KASSERT(lock != NULL);
 
 	// add stuff here as needed
+	spinlock_cleanup(&lock->locked);
 
 	kfree(lock->lk_name);
 	kfree(lock);
@@ -176,35 +179,44 @@ void
 lock_acquire(struct lock *lock)
 {
 	/* Call this (atomically) before waiting for a lock */
-	//HANGMAN_WAIT(&curthread->t_hangman, &lock->lk_hangman);
+	HANGMAN_WAIT(&curthread->t_hangman, &lock->lk_hangman);
 
 	// Write this
+	spinlock_acquire(&lock->locked);
 
-	(void)lock;  // suppress warning until code gets written
+	//(void)lock;  // suppress warning until code gets written
 
 	/* Call this (atomically) once the lock is acquired */
-	//HANGMAN_ACQUIRE(&curthread->t_hangman, &lock->lk_hangman);
+	HANGMAN_ACQUIRE(&curthread->t_hangman, &lock->lk_hangman);
 }
 
 void
 lock_release(struct lock *lock)
 {
+
+	spinlock_release(&lock->locked);
+
 	/* Call this (atomically) when the lock is released */
-	//HANGMAN_RELEASE(&curthread->t_hangman, &lock->lk_hangman);
+	HANGMAN_RELEASE(&curthread->t_hangman, &lock->lk_hangman);
 
 	// Write this
 
-	(void)lock;  // suppress warning until code gets written
+	//(void)lock;  // suppress warning until code gets written
 }
 
 bool
 lock_do_i_hold(struct lock *lock)
 {
 	// Write this
+	if(lock->locked->cpu->thread == curthread) {
+		return true
+	}; else {
+		return false
+	};
 
-	(void)lock;  // suppress warning until code gets written
+	//(void)lock;  // suppress warning until code gets written
 
-	return true; // dummy until code gets written
+	//return true; // dummy until code gets written
 }
 
 ////////////////////////////////////////////////////////////
